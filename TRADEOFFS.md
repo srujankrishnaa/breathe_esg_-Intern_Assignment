@@ -7,7 +7,7 @@ Three things deliberately not built, and exactly what breaks because of each cut
 
 ## 1. Single SAP Format — OData V2 Only
 
-**What was built:** The SAP ingestion pipeline handles one format: OData V2 JSON with the PurchaseOrderSet entity structure. The mock generator produces this format. The static test files are in this format. The normalizer expects this format.
+**What was built:** The SAP ingestion pipeline handles one format: OData V2 JSON with the PurchaseOrderSet entity structure. The mock generator produces this format. The test simulation payloads are in this format. The normalizer expects this format.
 
 **What was not built:** IDoc flat file parsing, BAPI function module integration, SAP S/4HANA OData V4 support, German column header variants, RFC-based connectors.
 

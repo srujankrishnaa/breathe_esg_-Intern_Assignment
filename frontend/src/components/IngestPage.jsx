@@ -149,7 +149,7 @@ export default function IngestPage({ onLogout }) {
               {ingested.sap && <span className="check-mark">✓</span>}
             </div>
             <p className="source-card-desc">
-              Simulate an SAP OData feed or load a static test file.
+              Simulate an SAP OData feed using the dynamic generator or specific test scenarios.
               Each trigger generates purchase order records for fuel
               combustion at your registered plants.
             </p>

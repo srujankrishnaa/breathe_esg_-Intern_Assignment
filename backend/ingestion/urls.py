@@ -4,7 +4,7 @@ Ingestion API URL routes.
 All prefixed with /api/ (configured in config/urls.py).
 
 Endpoints:
-  POST  /api/ingest/sap/trigger/       — SAP data (generator or static file)
+  POST  /api/ingest/sap/trigger/       — SAP data (generator or test simulation payload)
   POST  /api/ingest/utility/            — Utility CSV upload
   POST  /api/ingest/travel/             — Travel CSV upload
   GET   /api/records/                   — List normalized records (filterable)

@@ -108,9 +108,9 @@ Hash inputs per source:
 
 ### SAP Trigger Generates Fresh Payload by Default
 
-**Decision:** Default POST to `/api/ingest/sap/trigger/` generates a fresh OData payload using `generate_sap_payload()`. The `?file=` parameter loads a static test file.
+**Decision:** Default POST to `/api/ingest/sap/trigger/` generates a fresh OData payload using `generate_sap_payload()`. The `?file=` parameter loads a specific test simulation payload.
 
-**Why:** A real SAP OData integration would make an outbound HTTP call to the SAP Gateway URL on every trigger. The generator mimics this behavior — each call produces different PO numbers, so a second trigger creates new rows rather than duplicates. The static file path is retained for error scenario testing (unknown plant code, high quantity flags) where deterministic data is required. Swapping the generator for a real HTTP call in production requires changing one function — the downstream ingestion pipeline is identical.
+**Why:** A real SAP OData integration would make an outbound HTTP call to the SAP Gateway URL on every trigger. The generator mimics this behavior — each call produces different PO numbers, so a second trigger creates new rows rather than duplicates. The test simulation payloads are retained for error scenario testing (unknown plant code, high quantity flags) where deterministic data is required. Swapping the generator for a real HTTP call in production requires changing one function — the downstream ingestion pipeline is identical.
 
 ---
 

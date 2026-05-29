@@ -2,7 +2,7 @@
 Ingestion API views.
 
 Endpoints:
-  POST /api/ingest/sap/trigger/     — Fetch SAP data (generator or static file)
+  POST /api/ingest/sap/trigger/     — Trigger SAP data (generator or test simulation payload)
   POST /api/ingest/utility/         — Upload utility CSV
   POST /api/ingest/travel/          — Upload travel CSV
   GET  /api/records/                — List normalized records (with filters)

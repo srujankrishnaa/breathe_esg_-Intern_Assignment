@@ -74,7 +74,7 @@ export async function fetchTenantInfo() {
 }
 
 /**
- * Trigger SAP ingestion (dynamic generator or static file).
+ * Trigger SAP ingestion (dynamic generator or test simulation payload).
  */
 export async function triggerSAP(fileParam = '') {
   const url = fileParam

@@ -16,7 +16,13 @@ Every ingestion creates two records: a Raw record that stores the source data ex
 All three sources — SAP fuel procurement, utility electricity, corporate travel — write into a single `NormalizedEmissionRecord` table. A `source_type` field identifies the origin. A generic FK (`raw_record_id` + `raw_record_type`) points back to whichever raw table produced it. This is what makes cross-source reporting (Scope 1 + 2 + 3 totals, comparisons over time) possible without UNION queries or application-side joins.
 
 **Principle 3 — Tenant isolation at every layer.**
-The system is multi-tenant from the ground up. Every data-bearing table carries a `tenant` FK. The `_get_tenant(request)` helper resolves the authenticated user's tenant on every API call via `UserProfile`, and every queryset filters by that tenant before any other condition is applied. No query touches rows from another tenant. The scaffold handles multiple clients in a single database with zero application-level data leakage.
+The system is multi-tenant from the ground up, designed to run multiple clients securely within a single database instance (such as our single Render PostgreSQL instance). Every data-bearing table carries a `tenant` FK. The `_get_tenant(request)` helper resolves the authenticated user's tenant on every API call via `UserProfile`, and every queryset filters by that tenant before any other condition is applied. No query touches rows from another tenant. 
+
+For the prototype deployment, we have implemented exactly two isolated tenants:
+* **Acme Industries** (associated with the `analyst` user account)
+* **Beta Corp** (associated with the `reviewer` user account)
+
+Row-level separation guarantees that the `analyst` and `reviewer` can only query and modify data for their respective companies, with zero cross-tenant data leakage.
 
 ---
 
@@ -55,22 +61,26 @@ The top-level isolation boundary. Every queryable object in the system carries a
 | slug | SlugField(100) | e.g. "acme" — used in URLs and seed |
 | created_at | DateTimeField | auto |
 
-Every data-bearing table carries a `tenant` FK. All querysets are scoped by tenant — the `_get_tenant(request)` helper resolves the authenticated user's tenant via `UserProfile`, and every view filters against it before returning data. A single database serves multiple clients with row-level isolation.
+Every data-bearing table carries a `tenant` FK. All querysets are scoped by tenant — the `_get_tenant(request)` helper resolves the authenticated user's tenant via `UserProfile`, and every view filters against it before returning data. In our Render deployment, a single PostgreSQL database serves both the `Acme Industries` (`analyst`) and `Beta Corp` (`reviewer`) tenants with strict row-level isolation.
 
 ---
 
 ### User-to-Tenant Link — `core_userprofile`
 
-Extends Django's built-in User with tenant assignment. One profile per user.
+This table acts as the association bridge linking Django's built-in authentication system with our multi-tenant boundary. Each database user is assigned to exactly one tenant profile to enforce strict row-level query isolation during API requests.
 
 | Field | Type | Notes |
 |-------|------|-------|
 | user | OneToOneField(User) | on_delete=CASCADE |
 | tenant | ForeignKey(Tenant) | on_delete=CASCADE |
 
+**Why `on_delete=CASCADE` is used here:**
+* Deleting a Django user automatically cleans up their profile to prevent orphaned link records.
+* Deleting a Tenant automatically dissolves all associated profiles to prevent unauthorized access.
+
 ---
 
-### SAP Plant Code Reference Table — `ingestion_plantlookup`
+### SAP Plant Code LookUp Table — `ingestion_plantlookup`
 
 SAP plant codes are opaque identifiers (1010, 2030, 3050). Without a lookup table, we cannot determine the geographic region for an emission record, which affects the emission factor applied for electricity and is required for audit reporting.
 
@@ -89,7 +99,7 @@ Three plant codes are pre-loaded for Acme Industries: 1010 (Mumbai Factory, Maha
 
 ### SAP Ingestion Run Header — `ingestion_sapingestionbatch`
 
-One batch per SAP trigger call. Records whether the data came from the dynamic generator or a static test file, and carries top-level status and counts for operational visibility.
+One batch per SAP trigger call. Tracks the simulation scenario (e.g., dynamic generator, or specific plant-error/quantity-error testing payloads), and carries top-level status and counts for operational visibility.
 
 | Field | Type | Notes |
 |-------|------|-------|
@@ -128,7 +138,7 @@ One row per purchase order line item in the SAP OData response. Fields are named
 | source_row_hash | CharField(64) | SHA256 of PO+item+qty+date+plant — dedup key |
 | created_at | DateTimeField | auto |
 
-`source_row_hash` is computed from the identifying fields of each purchase order line (plant code, material group, quantity, document date, PO number, PO item) before the row is inserted. On every ingestion trigger — whether from the dynamic generator or a static test file — the hash of each incoming row is checked against existing `RawSAPRecord` rows for the same tenant. If a match exists, the row is skipped and counted as `duplicates_skipped` in the batch response. This prevents double-counting emissions when the same purchase order data arrives across multiple ingestion runs, which is the expected behavior when a client triggers ingestion more than once in the same reporting period.
+`source_row_hash` is computed from the identifying fields of each purchase order line (plant code, material group, quantity, document date, PO number, PO item) before the row is inserted. On every ingestion trigger — whether from the dynamic generator or specific test simulation payloads — the hash of each incoming row is checked against existing `RawSAPRecord` rows for the same tenant. If a match exists, the row is skipped and counted as `duplicates_skipped` in the batch response. This prevents double-counting emissions when the same purchase order data arrives across multiple ingestion runs, which is the expected behavior when a client triggers ingestion more than once in the same reporting period.
 
 ---
 
