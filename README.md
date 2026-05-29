@@ -29,8 +29,6 @@ The prototype features strict multi-tenancy. Two separate test tenants exist:
 | **Acme Industries** | Analyst | `analyst` | `breathe2026` | Contains pre-existing test data |
 | **Beta Corp** | Reviewer | `reviewer` | `breathe2026` | Starts completely empty |
 
-*Try uploading the mock data files located in `backend/mock_data/` to test the pipeline.*
-
 ---
 
 ## Key Design Documents
