@@ -22,6 +22,6 @@ services:
       - key: DJANGO_SECRET_KEY
         generateValue: true
       - key: CORS_ALLOWED_ORIGINS
-        value: "https://shimmering-nougat-a63f2e.netlify.app"
+        value: "https://breathe-esg-project.netlify.app"
       - key: CSRF_TRUSTED_ORIGINS
-        value: "https://shimmering-nougat-a63f2e.netlify.app"
+        value: "https://breathe-esg-project.netlify.app"
